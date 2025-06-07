@@ -36,6 +36,32 @@ func (s *SimpleTokenManager) ValidateToken(token string) bool {
 	return s.tokens[token]
 }
 
+type SimpleTokenManager2 struct {
+	tokens map[string]bool
+}
+
+// AddToken 方法实现
+func (s *SimpleTokenManager2) AddToken(token string) error {
+	if s.tokens == nil {
+		s.tokens = make(map[string]bool)
+	}
+	s.tokens[token] = true
+	fmt.Printf("Token %s added\n", token)
+	return nil
+}
+
+// RemoveToken 方法实现
+func (s *SimpleTokenManager2) RemoveToken(token string) error {
+	delete(s.tokens, token)
+	fmt.Printf("Token %s removed\n", token)
+	return nil
+}
+
+// ValidateToken 方法实现
+func (s *SimpleTokenManager2) ValidateToken2(token string) bool {
+	return s.tokens[token]
+}
+
 func main() {
 	tm := &SimpleTokenManager{}
 	tm.AddToken("abc123")

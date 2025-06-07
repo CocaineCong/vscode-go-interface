@@ -24,6 +24,7 @@ interface InterfaceMethod {
   name: string;
   interfaceName: string;
   location: Location;
+  endLocation: Location;
 }
 
 interface Implementation {
@@ -58,54 +59,80 @@ class GoInterfaceCodeLensProvider implements vscode.CodeLensProvider {
 
     const codeLenses: vscode.CodeLens[] = [];
     const filePath = document.uri.fsPath;
+    const packagePath = path.dirname(document.fileName);
+    const packageAnalysis = await this.analyzePackageInterfaces(packagePath);
 
     try {
-      // 分析接口方法
-      const interfaces = await this.analyzeFileInterfaces(filePath);
-
+      // 分析当前文件中的接口和实现
+      const interfaces = await this.analyzeFileInterfaces(document.fileName);
+      const implementations = await this.analyzeFileImplementations(document.fileName);
       this.addInterfaceDecorations(document);
-
       this.addImplementationDecorations(document);
-
-      for (const interfaceMethod of interfaces) {
-        const range = new vscode.Range(
-          interfaceMethod.location.line,
-          interfaceMethod.location.column,
-          interfaceMethod.location.line,
-          interfaceMethod.location.column + interfaceMethod.name.length
-        );
-        
-        codeLenses.push(new vscode.CodeLens(range, {
-          title: "🔍 implementations",
-          command: "goInterfaceNavigator.findImplementations",
-          arguments: [interfaceMethod.name]
-        }));
-      }
-
-      // 分析方法实现
-      const implementations = await this.analyzeFileImplementations(filePath);
+      console.log('Found interfaces:', interfaces.length);
+      console.log('Found implementations:', implementations.length);
+        // 创建接口方法名称集合
+      const interfaceMethodNames = new Set(interfaces.map(iface => iface.name));
+      console.log('Interface method names:', Array.from(interfaceMethodNames));
+      
+       for (const interfaceMethod of interfaces) {
+          const range = new vscode.Range(
+            interfaceMethod.location.line,
+            interfaceMethod.location.column,
+            interfaceMethod.location.line,
+            interfaceMethod.location.column + interfaceMethod.name.length
+          );
+      
+      codeLenses.push(new vscode.CodeLens(range, {
+        title: "🔍 implementations",
+        command: "goInterfaceNavigator.findImplementations",
+        arguments: [interfaceMethod.name]
+      }));
+    }
+       // 分析方法实现（只显示完整且精确实现接口的方法）
       for (const impl of implementations) {
-        const range = new vscode.Range(
-          impl.location.line,
-          impl.location.column,
-          impl.location.line,
-          impl.location.column + impl.methodName.length
-        );
-        
-        codeLenses.push(new vscode.CodeLens(range, {
-          title: "🎈 back to interface",
-          command: "goInterfaceNavigator.findInterface",
-          arguments: [impl.methodName]
-        }));
-
-      }
-
+        if (packageAnalysis.methodToInterface[impl.methodName]) {
+            const range = new vscode.Range(impl.location.line, impl.location.column, impl.location.line, impl.location.column);
+            const codeLens = new vscode.CodeLens(range, {
+                title: '✅ interface implementation',
+                command: 'goInterfaceNavigator.findInterface',
+                arguments: [impl.methodName]
+            });
+            codeLenses.push(codeLens);
+        }
+    }
     } catch (error) {
       console.error('AST分析错误:', error);
     }
 
   
     return codeLenses;
+  }
+  
+
+  async checkInterfaceCompleteness(interfaceName: string, filePath: string): Promise<{isComplete: boolean, implementationCount: number, totalMethods: number}> {
+    try {
+      const workspaceRoot = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(filePath))?.uri.fsPath;
+      if (!workspaceRoot) {
+        return {isComplete: false, implementationCount: 0, totalMethods: 0};
+      }
+
+      // 获取接口的所有方法
+      const allInterfaces = await this.analyzeFileInterfaces(filePath);
+      const interfaceMethods = allInterfaces.filter(iface => iface.interfaceName === interfaceName);
+      const totalMethods = interfaceMethods.length;
+
+      // 检查实现
+      const implementations = await this.analyzeFileImplementations(filePath);
+      const implementationCount = implementations.length;
+
+      // 简单的完整性检查（可以根据需要改进）
+      const isComplete = implementationCount > 0 && implementationCount === totalMethods;
+
+      return {isComplete, implementationCount, totalMethods};
+    } catch (error) {
+      console.error('检查接口完整性时出错:', error);
+      return {isComplete: false, implementationCount: 0, totalMethods: 0};
+    }
   }
 
   async addInterfaceDecorations(document: vscode.TextDocument) {
@@ -137,14 +164,33 @@ class GoInterfaceCodeLensProvider implements vscode.CodeLensProvider {
     }
   }
 
-  
+  private async analyzePackageInterfaces(packagePath: string): Promise<any> {
+    return new Promise((resolve, reject) => {
+        const astAnalyzerPath = getAstAnalyzerPath();
+        const command = `${astAnalyzerPath} analyze-package-interfaces "${packagePath}"`;
+        cp.exec(command, (error, stdout, stderr) => {
+            if (error) {
+                console.error('Error analyzing package interfaces:', error);
+                resolve({ interfaceImplementations: {}, methodToInterface: {} });
+                return;
+            }
+            try {
+                const result = JSON.parse(stdout);
+                resolve(result);
+            } catch (parseError) {
+                console.error('Error parsing package analysis result:', parseError);
+                resolve({ interfaceImplementations: {}, methodToInterface: {} });
+            }
+        });
+    });
+}
 
   private async analyzeFileInterfaces(filePath: string): Promise<InterfaceMethod[]> {
     return new Promise((resolve) => {
       const astAnalyzerPath = getAstAnalyzerPath();
       const command = `"${astAnalyzerPath}" find-file-interfaces "${filePath}"`;
       
-      console.log('执行命令:', command); // 调试日志
+      console.log('执行接口分析命令:', command);
       
       cp.exec(command, (error, stdout, stderr) => {
         if (error) {
@@ -154,8 +200,12 @@ class GoInterfaceCodeLensProvider implements vscode.CodeLensProvider {
           return;
         }
         
+        console.log('接口分析原始输出:', stdout);
+        
         try {
           const result: AnalysisResult = JSON.parse(stdout);
+          console.log('解析后的接口结果:', result);
+          console.log('接口数组:', result.interfaces);
           resolve(result.interfaces || []);
         } catch (parseError) {
           console.error('解析AST输出失败:', parseError);
@@ -223,8 +273,6 @@ class GoInterfaceCodeLensProvider implements vscode.CodeLensProvider {
       editor.setDecorations(implementationDecorator, decorations);
     }
   }
-
-  
 
 }
 
