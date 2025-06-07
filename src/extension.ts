@@ -73,7 +73,6 @@ class GoInterfaceCodeLensProvider implements vscode.CodeLensProvider {
         // 创建接口方法名称集合
       const interfaceMethodNames = new Set(interfaces.map(iface => iface.name));
       console.log('Interface method names:', Array.from(interfaceMethodNames));
-      
        for (const interfaceMethod of interfaces) {
           const range = new vscode.Range(
             interfaceMethod.location.line,
@@ -249,22 +248,23 @@ class GoInterfaceCodeLensProvider implements vscode.CodeLensProvider {
     if (!implementationDecorator) {
       return;
     }
-
+    const packagePath = path.dirname(document.fileName);
+    const packageAnalysis = await this.analyzePackageInterfaces(packagePath);
     const implementations = await this.analyzeFileImplementations(document.uri.fsPath);
     if (!implementations || implementations.length === 0) {
       return;
     }
-
     const decorations: vscode.DecorationOptions[] = [];
-    
     for (const impl of implementations) {
-      const line = impl.location.line; // 使用正确的行号（不减1）
-      const range = new vscode.Range(line, 0, line, 0);
+      if (packageAnalysis.methodToInterface[impl.methodName]) {
+        const line = impl.location.line; // 使用正确的行号（不减1）
+        const range = new vscode.Range(line, 0, line, 0);
       
-      decorations.push({
-        range,
-        hoverMessage: `🔧 接口实现: ${impl.receiverType}.${impl.methodName}`
-      });
+        decorations.push({
+          range,
+          hoverMessage: `🔧 接口实现: ${impl.receiverType}.${impl.methodName}`
+        });
+      }
     }
 
     // 应用装饰器到当前活动编辑器
