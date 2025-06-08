@@ -61,9 +61,3 @@ func (s *SimpleTokenManager2) RemoveToken(token string) error {
 func (s *SimpleTokenManager2) ValidateToken2(token string) bool {
 	return s.tokens[token]
 }
-
-func main() {
-	tm := &SimpleTokenManager{}
-	tm.AddToken("abc123")
-	fmt.Println(tm.ValidateToken("abc123"))
-}

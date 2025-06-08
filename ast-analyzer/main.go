@@ -537,7 +537,7 @@ func findAllInterfacesWithMethods(directory string) []InterfaceInfo {
 	})
 
 	if err != nil {
-		// fmt.Printf("查找接口时出错: %v\n", err)
+		fmt.Printf("查找接口时出错: %v\n", err)
 	}
 
 	return interfaces
@@ -577,7 +577,7 @@ func collectAllTypeMethods(directory string) map[string]map[string]*MethodInfo {
 	})
 
 	if err != nil {
-		// fmt.Printf("收集方法时出错: %v\n", err)
+		fmt.Printf("收集方法时出错: %v\n", err)
 	}
 
 	return allTypeMethods
@@ -682,7 +682,7 @@ func findInterfaces(directory, methodName string) []InterfaceMethod {
 	})
 
 	if err != nil {
-		// fmt.Printf("Error walking directory: %v\n", err)
+		fmt.Printf("Error walking directory: %v\n", err)
 	}
 
 	return interfaces
