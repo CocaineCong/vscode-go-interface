@@ -5,7 +5,8 @@
   "main": "out/server.js",
   "scripts": {
     "compile": "tsc -p .",
-    "watch": "tsc -w -p ."
+    "watch": "tsc -w -p .",
+    "lint": "eslint src --ext ts"
   },
   "dependencies": {
     "vscode-languageserver": "^8.1.0",
