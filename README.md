@@ -1,3 +1,23 @@
-# vscode-go-interface
-go interface navigation in vscode
+# vscode-go-interface Go语言的interface跳转vscode插件
 
+## 功能
+
+- 支持Go语言的interface跳转
+
+![image](./images/interface.png)
+
+- 支持Go语言的interface实现的函数跳转
+
+![image](./images/interface_nav.png)
+
+![image](./images/implementation.png)
+
+
+## 待完善的点
+
+- [ ] 点击位置不够精准
+- [ ] 跳转后窗口无法自动关闭（待调研）
+- [ ] interface 本身也需要跳转和返回，不仅仅是interface所定义的函数
+- [ ] 代码重构，太慢了
+
+## 安装
