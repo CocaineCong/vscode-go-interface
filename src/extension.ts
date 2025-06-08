@@ -4,9 +4,6 @@ import * as path from 'path';
 import * as cp from 'child_process';
 import {
   LanguageClient,
-  LanguageClientOptions,
-  ServerOptions,
-  TransportKind
 } from 'vscode-languageclient/node';
 
 let client: LanguageClient | undefined; // 修改为可选类型
@@ -58,7 +55,6 @@ class GoInterfaceCodeLensProvider implements vscode.CodeLensProvider {
     }
 
     const codeLenses: vscode.CodeLens[] = [];
-    const filePath = document.uri.fsPath;
     const packagePath = path.dirname(document.fileName);
     const packageAnalysis = await this.analyzePackageInterfaces(packagePath);
 
@@ -68,11 +64,11 @@ class GoInterfaceCodeLensProvider implements vscode.CodeLensProvider {
       const implementations = await this.analyzeFileImplementations(document.fileName);
       this.addInterfaceDecorations(document);
       this.addImplementationDecorations(document);
-      console.log('Found interfaces:', interfaces.length);
-      console.log('Found implementations:', implementations.length);
+      // console.log('Found interfaces:', interfaces.length);
+      // console.log('Found implementations:', implementations.length);
         // 创建接口方法名称集合
-      const interfaceMethodNames = new Set(interfaces.map(iface => iface.name));
-      console.log('Interface method names:', Array.from(interfaceMethodNames));
+      // const interfaceMethodNames = new Set(interfaces.map(iface => iface.name));
+      // console.log('Interface method names:', Array.from(interfaceMethodNames));
        for (const interfaceMethod of interfaces) {
           const range = new vscode.Range(
             interfaceMethod.location.line,
@@ -189,7 +185,7 @@ class GoInterfaceCodeLensProvider implements vscode.CodeLensProvider {
       const astAnalyzerPath = getAstAnalyzerPath();
       const command = `"${astAnalyzerPath}" find-file-interfaces "${filePath}"`;
       
-      console.log('执行接口分析命令:', command);
+      // console.log('执行接口分析命令:', command);
       
       cp.exec(command, (error, stdout, stderr) => {
         if (error) {
@@ -199,12 +195,12 @@ class GoInterfaceCodeLensProvider implements vscode.CodeLensProvider {
           return;
         }
         
-        console.log('接口分析原始输出:', stdout);
+        // console.log('接口分析原始输出:', stdout);
         
         try {
           const result: AnalysisResult = JSON.parse(stdout);
-          console.log('解析后的接口结果:', result);
-          console.log('接口数组:', result.interfaces);
+          // console.log('解析后的接口结果:', result);
+          // console.log('接口数组:', result.interfaces);
           resolve(result.interfaces || []);
         } catch (parseError) {
           console.error('解析AST输出失败:', parseError);
@@ -222,7 +218,7 @@ class GoInterfaceCodeLensProvider implements vscode.CodeLensProvider {
       const astAnalyzerPath = getAstAnalyzerPath();
       const command = `"${astAnalyzerPath}" find-file-implementations "${filePath}"`;
       
-      console.log('执行命令:', command); // 调试日志
+      // console.log('执行命令:', command); // 调试日志
       
       cp.exec(command, (error, stdout, stderr) => {
         if (error) {
@@ -354,7 +350,7 @@ export function activate(context: vscode.ExtensionContext) {
       let methodName: string;
       let editor = vscode.window.activeTextEditor;
       
-      console.log('findImplementations called with args:', args);
+      // console.log('findImplementations called with args:', args);
       
       // 处理不同的调用方式
       if (args.length > 0 && typeof args[0] === 'string' && !args[0].startsWith('file://')) {
@@ -377,7 +373,7 @@ export function activate(context: vscode.ExtensionContext) {
         methodName = editor.document.getText(wordRange);
       }
 
-      console.log('查找实现的方法名:', methodName);
+      // console.log('查找实现的方法名:', methodName);
 
       // 获取当前工作区的根目录
       const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -431,7 +427,7 @@ export function activate(context: vscode.ExtensionContext) {
       let methodName: string;
       let editor = vscode.window.activeTextEditor;
       
-      console.log('findInterface called with args:', args);
+      // console.log('findInterface called with args:', args);
       
       // 处理不同的调用方式
       if (args.length > 0 && typeof args[0] === 'string' && !args[0].startsWith('file://')) {
@@ -454,7 +450,7 @@ export function activate(context: vscode.ExtensionContext) {
         methodName = editor.document.getText(wordRange);
       }
 
-      console.log('查找接口的方法名:', methodName);
+      // console.log('查找接口的方法名:', methodName);
 
       // 获取当前工作区的根目录
       const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
@@ -509,7 +505,7 @@ async function findImplementationsWithAST(directory: string, methodName: string)
     const astAnalyzerPath = getAstAnalyzerPath();
     const command = `"${astAnalyzerPath}" find-implementations "${directory}" "${methodName}"`;
     
-    console.log('查找实现命令:', command); // 调试日志
+    // console.log('查找实现命令:', command); // 调试日志
     
     cp.exec(command, (error, stdout, stderr) => {
       if (error) {
@@ -536,7 +532,7 @@ async function findInterfacesWithAST(directory: string, methodName: string): Pro
     const astAnalyzerPath = getAstAnalyzerPath();
     const command = `"${astAnalyzerPath}" find-interfaces "${directory}" "${methodName}"`;
     
-    console.log('查找接口命令:', command); // 调试日志
+    // console.log('查找接口命令:', command); // 调试日志
     
     cp.exec(command, (error, stdout, stderr) => {
       if (error) {

@@ -1,22 +1,15 @@
 import {
   createConnection,
   TextDocuments,
-  Diagnostic,
-  DiagnosticSeverity,
   ProposedFeatures,
   InitializeParams,
   DidChangeConfigurationNotification,
-  CompletionItem,
-  CompletionItemKind,
   TextDocumentPositionParams,
   TextDocumentSyncKind,
   InitializeResult,
   CodeLens,
   CodeLensParams,
-  Command,
   Location,
-  Position,
-  Range
 } from 'vscode-languageserver/node';
 
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -80,116 +73,6 @@ connection.onInitialized(() => {
   }
 });
 
-// 删除这个旧的 CodeLens 提供器
-// connection.onCodeLens((params: CodeLensParams): CodeLens[] => {
-//   const document = documents.get(params.textDocument.uri);
-//   if (!document) {
-//     return [];
-//   }
-
-//   const codeLenses: CodeLens[] = [];
-//   const text = document.getText();
-//   const lines = text.split('\n');
-
-//   // 查找接口定义
-//   for (let i = 0; i < lines.length; i++) {
-//     const line = lines[i];
-    
-//     // 修复接口方法匹配 - 支持缩进
-//     const interfaceMethodMatch = line.match(/^\s*(\w+)\s*\([^)]*\)\s*\w*\s*$/); 
-//     if (interfaceMethodMatch && isInInterface(lines, i)) {
-//       const methodName = interfaceMethodMatch[1];
-      
-//       codeLenses.push({
-//         range: {
-//           start: { line: i, character: 0 },
-//           end: { line: i, character: line.length }
-//         },
-//         command: {
-//           title: `🔍 Find implementations`,
-//           command: 'goInterfaceNavigator.findImplementations',
-//           arguments: [document.uri, methodName, i]
-//         }
-//       });
-//     }
-    
-//     // 查找方法实现
-//     const methodImplMatch = line.match(/^func\s*\([^)]+\)\s*(\w+)\s*\([^)]*\)/);
-//     if (methodImplMatch) {
-//       const methodName = methodImplMatch[1];
-      
-//       codeLenses.push({
-//         range: {
-//           start: { line: i, character: 0 },
-//           end: { line: i, character: line.length }
-//         },
-//         command: {
-//           title: `📋 Implements interface`,
-//           command: 'goInterfaceNavigator.findInterface',
-//           arguments: [document.uri, methodName, i]
-//         }
-//       });
-//     }
-//   }
-
-//   return codeLenses;
-// });
-
-// 删除这个旧的辅助函数
-// function isInInterface(lines: string[], lineIndex: number): boolean {
-//   let inInterface = false;
-//   let braceCount = 0;
-  
-//   // 向上查找接口定义开始
-//   for (let i = lineIndex; i >= 0; i--) {
-//     const line = lines[i].trim();
-    
-//     // 检查是否是接口定义
-//     if (line.match(/type\s+\w+\s+interface\s*\{/)) {
-//       inInterface = true;
-//       break;
-//     }
-    
-//     // 如果遇到其他类型定义，停止查找
-//     if (line.match(/type\s+\w+\s+(struct|func)/)) {
-//       break;
-//     }
-    
-//     // 如果遇到函数定义，停止查找
-//     if (line.match(/^func\s/)) {
-//       break;
-//     }
-//   }
-  
-//   if (!inInterface) {
-//     return false;
-//   }
-  
-//   // 检查当前行是否还在接口定义内（通过大括号计数）
-//   for (let i = lineIndex; i >= 0; i--) {
-//     const line = lines[i];
-    
-//     // 计算大括号
-//     for (const char of line) {
-//       if (char === '}') {
-//         braceCount++;
-//       } else if (char === '{') {
-//         braceCount--;
-//         if (braceCount < 0) {
-//           return true; // 还在接口定义内
-//         }
-//       }
-//     }
-    
-//     // 如果找到接口定义行，停止
-//     if (line.match(/type\s+\w+\s+interface\s*\{/)) {
-//       break;
-//     }
-//   }
-  
-//   return braceCount < 0;
-// }
-
 // 实现提供器 - 使用Go AST
 connection.onImplementation(async (params: TextDocumentPositionParams) => {
   const document = documents.get(params.textDocument.uri);
@@ -207,11 +90,6 @@ connection.onImplementation(async (params: TextDocumentPositionParams) => {
   if (!methodName) {
     return [];
   }
-
-  // // 检查当前是否在接口定义中
-  // if (!isInInterface(lines, position.line)) {
-  //   return [];
-  // }
 
   // 使用Go AST分析器查找实现
   const implementations = await findMethodImplementationsWithAST(methodName, document.uri);
@@ -325,7 +203,7 @@ async function findInterfaceDefinitionsWithAST(methodName: string, currentUri: s
 // 确保Go分析器已构建
 async function ensureAnalyzerBuilt(analyzerPath: string): Promise<void> {
   try {
-    connection.console.log(`Checking analyzer path: ${analyzerPath}`);
+    // connection.console.log(`Checking analyzer path: ${analyzerPath}`);
     
     // 检查目录是否存在
     if (!fs.existsSync(analyzerPath)) {
@@ -334,23 +212,23 @@ async function ensureAnalyzerBuilt(analyzerPath: string): Promise<void> {
     
     // 检查是否存在main.go
     const mainGoPath = path.join(analyzerPath, 'main.go');
-    connection.console.log(`Checking main.go at: ${mainGoPath}`);
+    // connection.console.log(`Checking main.go at: ${mainGoPath}`);
     
     if (!fs.existsSync(mainGoPath)) {
       throw new Error(`AST analyzer main.go not found at: ${mainGoPath}`);
     }
     
-    connection.console.log('AST analyzer files found successfully');
+    // connection.console.log('AST analyzer files found successfully');
     
     // 检查go.mod是否存在
     const goModPath = path.join(analyzerPath, 'go.mod');
     if (!fs.existsSync(goModPath)) {
-      connection.console.log('Initializing go module...');
+      // connection.console.log('Initializing go module...');
       // 初始化go module
       await execAsync(`cd "${analyzerPath}" && go mod init ast-analyzer`);
     }
     
-    connection.console.log('AST analyzer is ready');
+    // connection.console.log('AST analyzer is ready');
   } catch (error) {
     connection.console.error(`Error ensuring analyzer built: ${error}`);
     throw error;
@@ -383,18 +261,18 @@ function isMethodImplementation(line: string): boolean {
 function getWorkspaceRoot(uri: string): string | null {
   try {
     const filePath = uri.replace('file://', '');
-    connection.console.log(`Getting workspace root for file: ${filePath}`);
+    // connection.console.log(`Getting workspace root for file: ${filePath}`);
     
     let currentDir = path.dirname(filePath);
-    connection.console.log(`Starting directory: ${currentDir}`);
+    // connection.console.log(`Starting directory: ${currentDir}`);
     
     // 向上查找go.mod文件
     while (currentDir !== path.dirname(currentDir)) {
       const goModPath = path.join(currentDir, 'go.mod');
-      connection.console.log(`Checking for go.mod at: ${goModPath}`);
+      // connection.console.log(`Checking for go.mod at: ${goModPath}`);
       
       if (fs.existsSync(goModPath)) {
-        connection.console.log(`Found workspace root: ${currentDir}`);
+        // connection.console.log(`Found workspace root: ${currentDir}`);
         return currentDir;
       }
       currentDir = path.dirname(currentDir);
@@ -402,7 +280,7 @@ function getWorkspaceRoot(uri: string): string | null {
     
     // 如果没找到go.mod，返回文件所在目录
     const fallbackDir = path.dirname(filePath);
-    connection.console.log(`No go.mod found, using fallback: ${fallbackDir}`);
+    // connection.console.log(`No go.mod found, using fallback: ${fallbackDir}`);
     return fallbackDir;
   } catch (error) {
     connection.console.error(`Error getting workspace root: ${error}`);
@@ -440,7 +318,7 @@ function findGoFiles(dir: string): string[] {
 connection.onCodeLens(async (params: CodeLensParams): Promise<CodeLens[]> => {
   const document = documents.get(params.textDocument.uri);
   if (!document) {
-    connection.console.log('CodeLens: No document found');
+    // connection.console.log('CodeLens: No document found');
     return [];
   }
 
@@ -451,46 +329,46 @@ connection.onCodeLens(async (params: CodeLensParams): Promise<CodeLens[]> => {
     return [];
   }
 
-  connection.console.log(`CodeLens: Processing file ${document.uri}`);
-  connection.console.log(`CodeLens: Workspace root ${workspaceRoot}`);
+  // connection.console.log(`CodeLens: Processing file ${document.uri}`);
+  // connection.console.log(`CodeLens: Workspace root ${workspaceRoot}`);
 
   try {
     // 使用扩展目录中的分析器，而不是工作区目录
     // 这里需要获取扩展的安装路径
     const extensionPath = process.env.EXTENSION_PATH || __dirname;
     const analyzerPath = path.join(path.dirname(path.dirname(extensionPath)), 'ast-analyzer');
-    connection.console.log(`CodeLens: Analyzer path ${analyzerPath}`);
+    // connection.console.log(`CodeLens: Analyzer path ${analyzerPath}`);
     
     // 确保分析器已编译
     await ensureAnalyzerBuilt(analyzerPath);
     
     // 获取当前文件的所有接口方法
     const filePath = document.uri.replace('file://', '');
-    connection.console.log(`CodeLens: Analyzing file ${filePath}`);
+    // connection.console.log(`CodeLens: Analyzing file ${filePath}`);
     
     const interfaceCommand = `cd "${analyzerPath}" && go run main.go find-file-interfaces "${filePath}"`;
-    connection.console.log(`CodeLens: Running command: ${interfaceCommand}`);
+    // connection.console.log(`CodeLens: Running command: ${interfaceCommand}`);
     
     const { stdout: interfaceResult } = await execAsync(interfaceCommand);
-    connection.console.log(`CodeLens: Interface result: ${interfaceResult}`);
+    // connection.console.log(`CodeLens: Interface result: ${interfaceResult}`);
     
     const interfaces = JSON.parse(interfaceResult);
-    connection.console.log(`CodeLens: Parsed interfaces:${JSON.stringify(interfaces)}`);
+    // connection.console.log(`CodeLens: Parsed interfaces:${JSON.stringify(interfaces)}`);
     
     // 为每个接口方法添加 CodeLens
     for (const intf of interfaces.interfaces || []) {
-      connection.console.log(`CodeLens: Processing interface method ${intf.name}`);
+      // connection.console.log(`CodeLens: Processing interface method ${intf.name}`);
       
       // 先查找该方法的实现数量
       const implCommand = `cd "${analyzerPath}" && go run main.go find-implementations "${workspaceRoot}" "${intf.name}"`;
-      connection.console.log(`CodeLens: Running impl command: ${implCommand}`);
+      // connection.console.log(`CodeLens: Running impl command: ${implCommand}`);
       
       const { stdout: implResult } = await execAsync(implCommand);
-      connection.console.log(`CodeLens: Implementation result: ${implResult}`);
+      // connection.console.log(`CodeLens: Implementation result: ${implResult}`);
       
       const implementations = JSON.parse(implResult);
       const implCount = implementations.implementations?.length || 0;
-      connection.console.log(`CodeLens: Found ${implCount} implementations for ${intf.name}`);
+      // connection.console.log(`CodeLens: Found ${implCount} implementations for ${intf.name}`);
       
       if (implCount > 0) {
         const codeLens = {
@@ -513,7 +391,7 @@ connection.onCodeLens(async (params: CodeLensParams): Promise<CodeLens[]> => {
     connection.console.error(`Error generating CodeLens: ${error}`);
   }
 
-  connection.console.log(`CodeLens: Returning ${codeLenses.length} code lenses`);
+  // connection.console.log(`CodeLens: Returning ${codeLenses.length} code lenses`);
   return codeLenses;
 });
 
