@@ -1,8 +1,13 @@
 {
-  "name": "goimpl-vscode",
-  "displayName": "Go Interface Navigator",
+  "name": "vscode-go-interface",
+  "displayName": "vscode-go-interface",
   "description": "Navigate between Go interfaces and implementations",
   "version": "0.0.1",
+  "publisher": "cocainecong",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CocaineCong/vscode-go-interface.git"
+  },
   "engines": {
     "vscode": "^1.54.0"
   },
@@ -30,7 +35,7 @@
     ],
     "configuration": {
       "type": "object",
-      "title": "Go Interface Navigator",
+      "title": "vscode-go-interface",
       "properties": {
         "goInterfaceNavigator.enable": {
           "type": "boolean",

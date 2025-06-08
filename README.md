@@ -1,4 +1,6 @@
-# vscode-go-interface Go语言的interface跳转vscode插件
+# vscode-go-interface 
+
+Go语言interface跳转的vscode插件
 
 ## 功能
 
