@@ -2,7 +2,7 @@
   "name": "vscode-go-interface",
   "displayName": "vscode-go-interface",
   "description": "Navigate between Go interfaces and implementations",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "cocainecong",
   "icon": "images/icon.png",
   "repository": {
