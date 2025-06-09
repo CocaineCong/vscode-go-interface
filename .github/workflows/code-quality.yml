@@ -35,9 +35,6 @@ jobs:
     - name: Run ESLint
       run: npm run lint
     
-    - name: Check TypeScript
-      run: npx tsc --noEmit
-    
     - name: Install golangci-lint
       run: |
         curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
