@@ -38,7 +38,7 @@ interface AnalysisResult {
 // 获取AST分析器路径 - 修复路径问题
 function getAstAnalyzerPath(): string {
   // 获取当前扩展的路径
-  const extensionPath = vscode.extensions.getExtension('your-publisher.goimpl-vscode')?.extensionPath;
+  const extensionPath = vscode.extensions.getExtension('cocainecong.vscode-go-interface')?.extensionPath;
   if (extensionPath) {
     return path.join(extensionPath, 'ast-analyzer', 'ast-analyzer');
   }
