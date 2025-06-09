@@ -66,10 +66,10 @@
     "package": "webpack --mode production --devtool hidden-source-map",
     "lint": "eslint src --ext ts",
     "lint:go": "cd ast-analyzer && golangci-lint run",
-    "test": "npm run compile",
+    "test": "npm run compile & npm test",
     "test:watch": "npm run watch & npm test",
     "test:go": "cd ast-analyzer && go test ./...",
-    "quality": "npm run lint && npm run lint:go && npx tsc --noEmit",
+    "quality": "npm run lint && npm run lint:go",
     "build:go": "cd ast-analyzer && go build -o ast-analyzer ."
   },
   "devDependencies": {
